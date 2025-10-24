@@ -1,0 +1,5 @@
+{
+  "name": "Medical Data Hub",
+  "description": "An application to showcase fetching, processing, and summarizing data from various public medical and pharmaceutical sources using Gemini for intelligent insights.",
+  "requestFramePermissions": []
+}
