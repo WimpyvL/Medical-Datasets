@@ -9,7 +9,14 @@ interface StatusLog {
     status: 'pending' | 'success' | 'error';
 }
 
-const allDataSources = Object.values(DataSource).filter(ds => ds !== DataSource.DataIngestion);
+const excludedSources = new Set<DataSource>([
+    DataSource.DataIngestion,
+    DataSource.FireScrapeTool,
+]);
+
+const allDataSources = (Object.values(DataSource) as DataSource[]).filter(
+    (ds) => !excludedSources.has(ds)
+);
 
 const DataIngestionView: React.FC = () => {
     const [isLoading, setIsLoading] = useState(false);
