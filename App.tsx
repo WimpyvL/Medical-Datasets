@@ -22,6 +22,7 @@ import PubMedCentral from './components/views/PubMedCentral';
 import Synthea from './components/views/Synthea';
 import InternationalRegistries from './components/views/InternationalRegistries';
 import DataIngestionView from './components/views/DataIngestionView';
+import FireScrapeTool from './components/views/FireScrapeTool';
 import CheXpertSplits from './components/views/CheXpertSplits';
 import MIMICSplits from './components/views/MIMICSplits';
 import RIDCOVID from './components/views/RIDCOVID';
@@ -40,6 +41,8 @@ const App: React.FC = () => {
     switch (activeSource) {
       case DataSource.DataIngestion:
         return <DataIngestionView />;
+      case DataSource.FireScrapeTool:
+        return <FireScrapeTool />;
       case DataSource.DailyMed:
         return <DailyMed />;
       case DataSource.OrangeBook:
