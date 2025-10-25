@@ -12,7 +12,7 @@ export type PatientCreateInput = z.infer<typeof patientCreateSchema>;
 
 export const patientResponseSchema = patientCreateSchema.extend({
   id: z.string().uuid(),
-  createdAt: z.string()
+  createdAt: z.string().datetime()
 });
 
 export type PatientResponse = z.infer<typeof patientResponseSchema>;
