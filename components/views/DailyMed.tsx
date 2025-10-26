@@ -8,7 +8,13 @@ import DataDisplay from '../DataDisplay';
 
 const DailyMed: React.FC = () => {
   const fetcher = useCallback((pageToken?: string) => fetchDailyMedData(pageToken), []);
-  const { data, isLoading, error, fetchData, fetchPage } = useSnapshotFetcher<DailyMedDrug>(fetcher);
+  const { snapshot, isLoading, isRefreshing, error, fetchLatest, loadPage } = useSnapshotFetcher<DailyMedDrug>(fetcher);
+  const downloadUrl = snapshot?.downloadUrl;
+  const handleDownload = useCallback(() => {
+    if (downloadUrl) {
+      window.open(downloadUrl, '_blank', 'noopener,noreferrer');
+    }
+  }, [downloadUrl]);
 
   const renderTable = (d: DailyMedDrug[]) => (
     <div className="overflow-x-auto">
@@ -45,11 +51,13 @@ const DailyMed: React.FC = () => {
       }
     >
       <DataDisplay<DailyMedDrug>
-        data={data}
+        snapshot={snapshot}
         error={error}
         isLoading={isLoading}
-        fetchData={fetchData}
-        fetchPage={fetchPage}
+        isRefreshing={isRefreshing}
+        onFetchLatest={fetchLatest}
+        onLoadPage={loadPage}
+        onDownload={downloadUrl ? handleDownload : undefined}
         renderData={renderTable}
       />
     </DataSourceCard>

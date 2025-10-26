@@ -5,11 +5,12 @@ import { ApiError } from '../../services/apiClient';
 type SnapshotFetcher<T> = (pageToken?: string) => Promise<SnapshotResponse<T>>;
 
 interface UseSnapshotFetcherResult<T> {
-  data: SnapshotResponse<T> | null;
+  snapshot: SnapshotResponse<T> | null;
   isLoading: boolean;
+  isRefreshing: boolean;
   error: string | null;
-  fetchData: () => void;
-  fetchPage: (token: string) => void;
+  fetchLatest: () => void;
+  loadPage: (token: string) => void;
   reset: () => void;
 }
 
@@ -26,32 +27,35 @@ const formatErrorMessage = (error: unknown): string => {
 };
 
 export const useSnapshotFetcher = <T,>(fetcher: SnapshotFetcher<T>): UseSnapshotFetcherResult<T> => {
-  const [data, setData] = useState<SnapshotResponse<T> | null>(null);
+  const [snapshot, setSnapshot] = useState<SnapshotResponse<T> | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const loadData = useCallback(
     async (pageToken?: string) => {
       setIsLoading(true);
+      setIsRefreshing(Boolean(snapshot));
       setError(null);
 
       try {
         const response = await fetcher(pageToken);
-        setData(response);
+        setSnapshot(response);
       } catch (err) {
         setError(formatErrorMessage(err));
       } finally {
+        setIsRefreshing(false);
         setIsLoading(false);
       }
     },
-    [fetcher],
+    [fetcher, snapshot],
   );
 
-  const fetchData = useCallback(() => {
+  const fetchLatest = useCallback(() => {
     void loadData();
   }, [loadData]);
 
-  const fetchPage = useCallback(
+  const loadPage = useCallback(
     (token: string) => {
       void loadData(token);
     },
@@ -59,16 +63,18 @@ export const useSnapshotFetcher = <T,>(fetcher: SnapshotFetcher<T>): UseSnapshot
   );
 
   const reset = useCallback(() => {
-    setData(null);
+    setSnapshot(null);
+    setIsRefreshing(false);
     setError(null);
   }, []);
 
   return {
-    data,
+    snapshot,
     isLoading,
+    isRefreshing,
     error,
-    fetchData,
-    fetchPage,
+    fetchLatest,
+    loadPage,
     reset,
   };
 };

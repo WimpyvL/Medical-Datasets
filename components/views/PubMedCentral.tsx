@@ -7,7 +7,13 @@ import { useSnapshotFetcher } from '../hooks/useSnapshotFetcher';
 
 const PubMedCentral: React.FC = () => {
   const fetcher = useCallback((pageToken?: string) => fetchPubMedCentralData(pageToken), []);
-  const { data, isLoading, error, fetchData, fetchPage } = useSnapshotFetcher<PubMedArticle>(fetcher);
+  const { snapshot, isLoading, isRefreshing, error, fetchLatest, loadPage } = useSnapshotFetcher<PubMedArticle>(fetcher);
+  const downloadUrl = snapshot?.downloadUrl;
+  const handleDownload = useCallback(() => {
+    if (downloadUrl) {
+      window.open(downloadUrl, '_blank', 'noopener,noreferrer');
+    }
+  }, [downloadUrl]);
 
   const renderCards = (d: PubMedArticle[]) => (
     <div className="space-y-4">
@@ -33,11 +39,13 @@ const PubMedCentral: React.FC = () => {
       }
     >
       <DataDisplay<PubMedArticle>
-        data={data}
+        snapshot={snapshot}
         error={error}
         isLoading={isLoading}
-        fetchData={fetchData}
-        fetchPage={fetchPage}
+        isRefreshing={isRefreshing}
+        onFetchLatest={fetchLatest}
+        onLoadPage={loadPage}
+        onDownload={downloadUrl ? handleDownload : undefined}
         renderData={renderCards}
       />
     </DataSourceCard>

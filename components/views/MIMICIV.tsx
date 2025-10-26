@@ -8,7 +8,13 @@ import { useSnapshotFetcher } from '../hooks/useSnapshotFetcher';
 
 const MIMICIV: React.FC = () => {
   const fetcher = useCallback((pageToken?: string) => fetchMimicIvData(pageToken), []);
-  const { data, isLoading, error, fetchData, fetchPage } = useSnapshotFetcher<MimicIvData>(fetcher);
+  const { snapshot, isLoading, isRefreshing, error, fetchLatest, loadPage } = useSnapshotFetcher<MimicIvData>(fetcher);
+  const downloadUrl = snapshot?.downloadUrl;
+  const handleDownload = useCallback(() => {
+    if (downloadUrl) {
+      window.open(downloadUrl, '_blank', 'noopener,noreferrer');
+    }
+  }, [downloadUrl]);
 
   const renderCards = (d: MimicIvData[]) => (
     <div className="space-y-4">
@@ -47,11 +53,13 @@ const MIMICIV: React.FC = () => {
       }
     >
       <DataDisplay<MimicIvData>
-        data={data}
+        snapshot={snapshot}
         error={error}
         isLoading={isLoading}
-        fetchData={fetchData}
-        fetchPage={fetchPage}
+        isRefreshing={isRefreshing}
+        onFetchLatest={fetchLatest}
+        onLoadPage={loadPage}
+        onDownload={downloadUrl ? handleDownload : undefined}
         renderData={renderCards}
       />
     </DataSourceCard>

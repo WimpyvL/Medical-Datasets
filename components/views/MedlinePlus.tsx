@@ -8,7 +8,13 @@ import { useSnapshotFetcher } from '../hooks/useSnapshotFetcher';
 
 const MedlinePlus: React.FC = () => {
   const fetcher = useCallback((pageToken?: string) => fetchMedlinePlusData(pageToken), []);
-  const { data, isLoading, error, fetchData, fetchPage } = useSnapshotFetcher<MedlinePlusTopic>(fetcher);
+  const { snapshot, isLoading, isRefreshing, error, fetchLatest, loadPage } = useSnapshotFetcher<MedlinePlusTopic>(fetcher);
+  const downloadUrl = snapshot?.downloadUrl;
+  const handleDownload = useCallback(() => {
+    if (downloadUrl) {
+      window.open(downloadUrl, '_blank', 'noopener,noreferrer');
+    }
+  }, [downloadUrl]);
   
   const renderCards = (d: MedlinePlusTopic[]) => (
     <div className="space-y-4">
@@ -40,11 +46,13 @@ const MedlinePlus: React.FC = () => {
       }
     >
       <DataDisplay<MedlinePlusTopic>
-        data={data}
+        snapshot={snapshot}
         error={error}
         isLoading={isLoading}
-        fetchData={fetchData}
-        fetchPage={fetchPage}
+        isRefreshing={isRefreshing}
+        onFetchLatest={fetchLatest}
+        onLoadPage={loadPage}
+        onDownload={downloadUrl ? handleDownload : undefined}
         renderData={renderCards}
       />
     </DataSourceCard>

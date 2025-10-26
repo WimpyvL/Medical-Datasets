@@ -7,7 +7,13 @@ import { useSnapshotFetcher } from '../hooks/useSnapshotFetcher';
 
 const FAERS: React.FC = () => {
   const fetcher = useCallback((pageToken?: string) => fetchFaersData(pageToken), []);
-  const { data, isLoading, error, fetchData, fetchPage } = useSnapshotFetcher<FaersData>(fetcher);
+  const { snapshot, isLoading, isRefreshing, error, fetchLatest, loadPage } = useSnapshotFetcher<FaersData>(fetcher);
+  const downloadUrl = snapshot?.downloadUrl;
+  const handleDownload = useCallback(() => {
+    if (downloadUrl) {
+      window.open(downloadUrl, '_blank', 'noopener,noreferrer');
+    }
+  }, [downloadUrl]);
 
   const renderTable = (d: FaersData[]) => (
     <div className="overflow-x-auto">
@@ -45,11 +51,13 @@ const FAERS: React.FC = () => {
       }
     >
       <DataDisplay<FaersData>
-        data={data}
+        snapshot={snapshot}
         error={error}
         isLoading={isLoading}
-        fetchData={fetchData}
-        fetchPage={fetchPage}
+        isRefreshing={isRefreshing}
+        onFetchLatest={fetchLatest}
+        onLoadPage={loadPage}
+        onDownload={downloadUrl ? handleDownload : undefined}
         renderData={renderTable}
       />
     </DataSourceCard>

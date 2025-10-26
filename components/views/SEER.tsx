@@ -7,7 +7,13 @@ import { useSnapshotFetcher } from '../hooks/useSnapshotFetcher';
 
 const SEER: React.FC = () => {
   const fetcher = useCallback((pageToken?: string) => fetchSeerData(pageToken), []);
-  const { data, isLoading, error, fetchData, fetchPage } = useSnapshotFetcher<SeerData>(fetcher);
+  const { snapshot, isLoading, isRefreshing, error, fetchLatest, loadPage } = useSnapshotFetcher<SeerData>(fetcher);
+  const downloadUrl = snapshot?.downloadUrl;
+  const handleDownload = useCallback(() => {
+    if (downloadUrl) {
+      window.open(downloadUrl, '_blank', 'noopener,noreferrer');
+    }
+  }, [downloadUrl]);
 
   const renderTable = (d: SeerData[]) => (
     <div className="overflow-x-auto">
@@ -45,11 +51,13 @@ const SEER: React.FC = () => {
       }
     >
       <DataDisplay<SeerData>
-        data={data}
+        snapshot={snapshot}
         error={error}
         isLoading={isLoading}
-        fetchData={fetchData}
-        fetchPage={fetchPage}
+        isRefreshing={isRefreshing}
+        onFetchLatest={fetchLatest}
+        onLoadPage={loadPage}
+        onDownload={downloadUrl ? handleDownload : undefined}
         renderData={renderTable}
       />
     </DataSourceCard>

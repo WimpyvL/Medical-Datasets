@@ -8,7 +8,13 @@ import { useSnapshotFetcher } from '../hooks/useSnapshotFetcher';
 
 const RIDCOVID: React.FC = () => {
   const fetcher = useCallback((pageToken?: string) => fetchRidCovidData(pageToken), []);
-  const { data, isLoading, error, fetchData, fetchPage } = useSnapshotFetcher<RidCovidData>(fetcher);
+  const { snapshot, isLoading, isRefreshing, error, fetchLatest, loadPage } = useSnapshotFetcher<RidCovidData>(fetcher);
+  const downloadUrl = snapshot?.downloadUrl;
+  const handleDownload = useCallback(() => {
+    if (downloadUrl) {
+      window.open(downloadUrl, '_blank', 'noopener,noreferrer');
+    }
+  }, [downloadUrl]);
 
   const renderCards = (d: RidCovidData[]) => (
     <div className="space-y-4">
@@ -38,11 +44,13 @@ const RIDCOVID: React.FC = () => {
       }
     >
       <DataDisplay<RidCovidData>
-        data={data}
+        snapshot={snapshot}
         error={error}
         isLoading={isLoading}
-        fetchData={fetchData}
-        fetchPage={fetchPage}
+        isRefreshing={isRefreshing}
+        onFetchLatest={fetchLatest}
+        onLoadPage={loadPage}
+        onDownload={downloadUrl ? handleDownload : undefined}
         renderData={renderCards}
       />
     </DataSourceCard>

@@ -8,7 +8,13 @@ import { useSnapshotFetcher } from '../hooks/useSnapshotFetcher';
 
 const MIMICSplits: React.FC = () => {
   const fetcher = useCallback((pageToken?: string) => fetchMimicSplitsData(pageToken), []);
-  const { data, isLoading, error, fetchData, fetchPage } = useSnapshotFetcher<MimicSplit>(fetcher);
+  const { snapshot, isLoading, isRefreshing, error, fetchLatest, loadPage } = useSnapshotFetcher<MimicSplit>(fetcher);
+  const downloadUrl = snapshot?.downloadUrl;
+  const handleDownload = useCallback(() => {
+    if (downloadUrl) {
+      window.open(downloadUrl, '_blank', 'noopener,noreferrer');
+    }
+  }, [downloadUrl]);
 
   const renderTable = (d: MimicSplit[]) => (
     <div className="overflow-x-auto">
@@ -46,11 +52,13 @@ const MIMICSplits: React.FC = () => {
       }
     >
       <DataDisplay<MimicSplit>
-        data={data}
+        snapshot={snapshot}
         error={error}
         isLoading={isLoading}
-        fetchData={fetchData}
-        fetchPage={fetchPage}
+        isRefreshing={isRefreshing}
+        onFetchLatest={fetchLatest}
+        onLoadPage={loadPage}
+        onDownload={downloadUrl ? handleDownload : undefined}
         renderData={renderTable}
       />
     </DataSourceCard>

@@ -8,7 +8,13 @@ import { useSnapshotFetcher } from '../hooks/useSnapshotFetcher';
 
 const CheXpertSplits: React.FC = () => {
   const fetcher = useCallback((pageToken?: string) => fetchChexpertSplitsData(pageToken), []);
-  const { data, isLoading, error, fetchData, fetchPage } = useSnapshotFetcher<ChexpertSplit>(fetcher);
+  const { snapshot, isLoading, isRefreshing, error, fetchLatest, loadPage } = useSnapshotFetcher<ChexpertSplit>(fetcher);
+  const downloadUrl = snapshot?.downloadUrl;
+  const handleDownload = useCallback(() => {
+    if (downloadUrl) {
+      window.open(downloadUrl, '_blank', 'noopener,noreferrer');
+    }
+  }, [downloadUrl]);
 
   const renderTable = (d: ChexpertSplit[]) => (
     <div className="overflow-x-auto">
@@ -46,11 +52,13 @@ const CheXpertSplits: React.FC = () => {
       }
     >
       <DataDisplay<ChexpertSplit>
-        data={data}
+        snapshot={snapshot}
         error={error}
         isLoading={isLoading}
-        fetchData={fetchData}
-        fetchPage={fetchPage}
+        isRefreshing={isRefreshing}
+        onFetchLatest={fetchLatest}
+        onLoadPage={loadPage}
+        onDownload={downloadUrl ? handleDownload : undefined}
         renderData={renderTable}
       />
     </DataSourceCard>
