@@ -1,20 +1,18 @@
 
 import { GoogleGenAI } from "@google/genai";
 
-const API_KEY = process.env.API_KEY;
-
-if (!API_KEY) {
-  // In a real app, you'd handle this more gracefully.
-  // Here we assume it's set in the environment.
-  console.warn("Gemini API key not found. Summarization will not work.");
-}
-
-const ai = new GoogleGenAI({ apiKey: API_KEY! });
+// Prefer Vite env in browser, fall back to Node env if present
+const API_KEY =
+  (typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_GOOGLE_API_KEY) ||
+  process?.env?.VITE_GOOGLE_API_KEY ||
+  process?.env?.API_KEY;
 
 export const summarizeWithGemini = async (data: any, context: string): Promise<string> => {
   if (!API_KEY) {
-    return "Error: Gemini API key is not configured. Please set the API_KEY environment variable.";
+    return "Error: Gemini API key is not configured. Please set VITE_GOOGLE_API_KEY in a .env file.";
   }
+
+  const ai = new GoogleGenAI({ apiKey: API_KEY });
 
   const prompt = `
     You are an expert medical data analyst. Your task is to provide a concise, easy-to-digest summary of the provided data.
@@ -35,7 +33,7 @@ export const summarizeWithGemini = async (data: any, context: string): Promise<s
       model: 'gemini-2.5-flash',
       contents: prompt,
     });
-    return response.text;
+    return (response as any).text;
   } catch (error) {
     console.error("Error calling Gemini API:", error);
     if (error instanceof Error) {
