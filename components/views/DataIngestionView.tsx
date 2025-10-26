@@ -162,10 +162,58 @@ const DataIngestionView: React.FC = () => {
                     source,
                     timestamp: fallbackTimestamp,
                     level: 'warn',
-                    message: 'Real-time updates are unavailable in this environment. The job will continue running server-side.',
+                    message: 'Real-time updates are unavailable in this environment. Polling for job status.',
                     status: initialStatus !== 'unknown' ? initialStatus : undefined,
                 });
-                resolve(initialStatus);
+
+                // Polling fallback
+                let isActive = true;
+                const terminalStates: JobStatus[] = ['completed', 'failed', 'cancelled'];
+                let lastStatus: JobStatus = initialStatus !== 'unknown' ? initialStatus : 'running';
+
+                const poll = async () => {
+                    try {
+                        const resp = await apiFetch(`/api/datasets/jobs/${encodeURIComponent(jobId)}/status`);
+                        const status: JobStatus = resp?.status || 'unknown';
+                        const pollTimestamp = new Date().toISOString();
+                        if (status !== lastStatus) {
+                            appendLog({
+                                id: `${jobId}-poll-${status}-${pollTimestamp}`,
+                                source,
+                                timestamp: pollTimestamp,
+                                level: 'info',
+                                message: `Job status updated: ${status}`,
+                                status,
+                            });
+                            lastStatus = status;
+                        }
+                        if (terminalStates.includes(status)) {
+                            isActive = false;
+                            resolve(status);
+                        } else if (isActive) {
+                            setTimeout(poll, 2000);
+                        }
+                    } catch (err) {
+                        const errorTimestamp = new Date().toISOString();
+                        appendLog({
+                            id: `${jobId}-poll-error-${errorTimestamp}`,
+                            source,
+                            timestamp: errorTimestamp,
+                            level: 'error',
+                            message: `Polling error: ${err instanceof Error ? err.message : String(err)}`,
+                            status: lastStatus,
+                        });
+                        // Optionally, you could reject here, or keep polling
+                        if (isActive) {
+                            setTimeout(poll, 4000);
+                        }
+                    }
+                };
+
+                poll();
+
+                // Cleanup if needed (e.g., on component unmount)
+                // Optionally, you could return a cancel function or use a ref to set isActive = false
                 return;
             }
 
