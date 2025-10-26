@@ -44,7 +44,7 @@ const OrangeBook: React.FC = () => {
         <>
           <p><strong>Method:</strong> File Download & Parsing</p>
           <p>The full process requires a backend to: (1) Download the ZIP archive from the FDA website, (2) Unzip the archive, and (3) Parse the tab-delimited text files (Products.txt, Patent.txt, Exclusivity.txt).</p>
-          <p>This component displays a pre-processed sample of this joined data.</p>
+          <p>Each ingest is consolidated server-side into a snapshot so the UI can surface merged records alongside pagination metadata and downloadable exports.</p>
         </>
       }
     >

@@ -93,8 +93,8 @@ const DataDisplay = <T,>({ data, error, isLoading, fetchData, renderData, fetchP
         )}
         {!isLoading && !error && (!data || data.items.length === 0) && (
           <div className="flex flex-col items-center justify-center h-full text-center">
-            <h3 className="text-lg font-medium text-slate-700">No Data Fetched</h3>
-            <p className="text-slate-500 mt-1">Click the button below to retrieve sample data.</p>
+            <h3 className="text-lg font-medium text-slate-700">No Snapshot Loaded</h3>
+            <p className="text-slate-500 mt-1">Request the latest backend snapshot to view records and pagination metadata.</p>
           </div>
         )}
       </div>
@@ -104,7 +104,7 @@ const DataDisplay = <T,>({ data, error, isLoading, fetchData, renderData, fetchP
           disabled={isLoading}
           className="px-6 py-2 bg-cyan-500 text-white font-semibold rounded-lg shadow-md hover:bg-cyan-600 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:ring-opacity-75 disabled:bg-slate-400 disabled:cursor-not-allowed transition-colors"
         >
-          {isLoading ? 'Fetching...' : 'Fetch Sample Data'}
+          {isLoading ? 'Fetching...' : 'Fetch Latest Snapshot'}
         </button>
       </div>
     </div>

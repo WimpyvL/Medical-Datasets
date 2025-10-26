@@ -33,7 +33,7 @@ const NIHSafety: React.FC = () => {
         <>
           <p><strong>Method:</strong> Web Scraping</p>
           <p>Because there is no public API, data must be scraped from the NCBI Bookshelf web pages. This requires a backend process using libraries like <code>BeautifulSoup</code> or <code>Puppeteer</code> to parse the HTML and extract structured fields.</p>
-          <p><strong>Note:</strong> Browser-based scraping is not feasible due to CORS policies. The data shown is a pre-scraped sample.</p>
+          <p><strong>Note:</strong> Browser-based scraping is not feasible due to CORS policies, so the backend caches the harvested content as timestamped snapshots for reuse.</p>
         </>
       }
     >
