@@ -38,6 +38,14 @@ export interface FireScrapeResult {
   fetchedAt: string;
 }
 
+export interface FireCrawlResult {
+  url: string;
+  markdown: string;
+  metadata: Record<string, unknown> | null;
+  links?: unknown[];
+  fetchedAt: string;
+}
+
 export interface DailyMedDrug {
   drug_name: string;
   last_updated: string;
