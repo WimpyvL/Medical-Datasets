@@ -7,7 +7,15 @@ const API_KEY =
   process?.env?.VITE_GOOGLE_API_KEY ||
   process?.env?.API_KEY;
 
-export const summarizeWithGemini = async (data: any, context: string): Promise<string> => {
+const stringifyData = (value: unknown): string => {
+  try {
+    return JSON.stringify(value, null, 2);
+  } catch {
+    return String(value);
+  }
+};
+
+export const summarizeWithGemini = async (data: unknown, context: string): Promise<string> => {
   if (!API_KEY) {
     return "Error: Gemini API key is not configured. Please set VITE_GOOGLE_API_KEY in a .env file.";
   }
@@ -21,7 +29,7 @@ export const summarizeWithGemini = async (data: any, context: string): Promise<s
     
     Data:
     \`\`\`json
-    ${JSON.stringify(data, null, 2)}
+    ${stringifyData(data)}
     \`\`\`
     
     Based on this data, provide a brief summary highlighting the most important insights.

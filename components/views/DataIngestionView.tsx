@@ -1,38 +1,9 @@
 
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { IngestionIcon } from '../icons/Icons';
-import { DataSource } from '../../types';
+import { DataSource, IngestionJobStatus } from '../../types';
+import type { IngestionJobResponse, IngestionLogEntry, IngestionLogLevel } from '../../types';
 import { apiFetch } from '../../services/apiClient';
-
-type JobStatus =
-    | 'queued'
-    | 'pending'
-    | 'running'
-    | 'completed'
-    | 'failed'
-    | 'cancelled'
-    | 'unknown';
-
-type LogLevel = 'info' | 'warn' | 'error' | 'debug';
-
-interface StatusLog {
-    id: string;
-    source: string;
-    timestamp: string;
-    level: LogLevel;
-    message: string;
-    status?: JobStatus;
-}
-
-interface IngestionJobResponse {
-    jobId?: string;
-    id?: string;
-    status?: string;
-    job?: {
-        id: string;
-        status?: string;
-    };
-}
 
 const excludedSources = new Set<DataSource>([
     DataSource.DataIngestion,
@@ -43,21 +14,21 @@ const allDataSources = (Object.values(DataSource) as DataSource[]).filter(
     (ds) => !excludedSources.has(ds)
 );
 
-const normalizeStatus = (status?: string | null): JobStatus => {
+const normalizeStatus = (status?: string | IngestionJobStatus | null): IngestionJobStatus => {
     if (!status) {
-        return 'unknown';
+        return IngestionJobStatus.Unknown;
     }
-    const lowered = status.toLowerCase();
-    if (['queued', 'queueing'].includes(lowered)) return 'queued';
-    if (['pending', 'waiting'].includes(lowered)) return 'pending';
-    if (['running', 'in_progress', 'processing', 'started', 'active'].includes(lowered)) return 'running';
-    if (['completed', 'success', 'succeeded', 'done', 'finished'].includes(lowered)) return 'completed';
-    if (['failed', 'error', 'errored'].includes(lowered)) return 'failed';
-    if (['cancelled', 'canceled', 'aborted', 'stopped'].includes(lowered)) return 'cancelled';
-    return 'unknown';
+    const lowered = status.toString().toLowerCase();
+    if (['queued', 'queueing'].includes(lowered)) return IngestionJobStatus.Queued;
+    if (['pending', 'waiting'].includes(lowered)) return IngestionJobStatus.Pending;
+    if (['running', 'in_progress', 'processing', 'started', 'active'].includes(lowered)) return IngestionJobStatus.Running;
+    if (['completed', 'success', 'succeeded', 'done', 'finished'].includes(lowered)) return IngestionJobStatus.Completed;
+    if (['failed', 'error', 'errored'].includes(lowered)) return IngestionJobStatus.Failed;
+    if (['cancelled', 'canceled', 'aborted', 'stopped'].includes(lowered)) return IngestionJobStatus.Cancelled;
+    return IngestionJobStatus.Unknown;
 };
 
-const normalizeLevel = (level?: string | null): LogLevel => {
+const normalizeLevel = (level?: string | null): IngestionLogLevel => {
     switch ((level ?? '').toLowerCase()) {
         case 'warn':
         case 'warning':
@@ -80,9 +51,10 @@ const formatTimestamp = (timestamp: string): string => {
     return `${date.toLocaleDateString()} ${date.toLocaleTimeString()}`;
 };
 
-const isTerminalStatus = (status: JobStatus): boolean => ['completed', 'failed', 'cancelled'].includes(status);
+const isTerminalStatus = (status: IngestionJobStatus): boolean =>
+    [IngestionJobStatus.Completed, IngestionJobStatus.Failed, IngestionJobStatus.Cancelled].includes(status);
 
-const LogLevelIcon: React.FC<{ level: LogLevel }> = ({ level }) => {
+const LogLevelIcon: React.FC<{ level: IngestionLogLevel }> = ({ level }) => {
     switch (level) {
         case 'warn':
             return (
@@ -113,32 +85,38 @@ const LogLevelIcon: React.FC<{ level: LogLevel }> = ({ level }) => {
     }
 };
 
-const StatusBadge: React.FC<{ status: JobStatus }> = ({ status }) => {
+const StatusBadge: React.FC<{ status: IngestionJobStatus }> = ({ status }) => {
     const normalized = normalizeStatus(status);
     const base = 'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold';
 
     switch (normalized) {
-        case 'queued':
-        case 'pending':
+        case IngestionJobStatus.Queued:
+        case IngestionJobStatus.Pending:
             return <span className={`${base} bg-slate-100 text-slate-700`}>{normalized}</span>;
-        case 'running':
+        case IngestionJobStatus.Running:
             return <span className={`${base} bg-blue-100 text-blue-700`}>running</span>;
-        case 'completed':
+        case IngestionJobStatus.Completed:
             return <span className={`${base} bg-emerald-100 text-emerald-700`}>completed</span>;
-        case 'failed':
+        case IngestionJobStatus.Failed:
             return <span className={`${base} bg-rose-100 text-rose-700`}>failed</span>;
-        case 'cancelled':
+        case IngestionJobStatus.Cancelled:
             return <span className={`${base} bg-amber-100 text-amber-700`}>cancelled</span>;
         default:
-            return <span className={`${base} bg-slate-100 text-slate-600`}>{status ?? 'unknown'}</span>;
+            return (
+                <span className={`${base} bg-slate-100 text-slate-600`}>
+                    {status ?? IngestionJobStatus.Unknown}
+                </span>
+            );
     }
 };
 
 const DataIngestionView: React.FC = () => {
     const [isLoading, setIsLoading] = useState(false);
-    const [statusLog, setStatusLog] = useState<StatusLog[]>([]);
+    const [statusLog, setStatusLog] = useState<IngestionLogEntry[]>([]);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
-    const [activeJob, setActiveJob] = useState<{ source: DataSource; status: JobStatus; jobId: string } | null>(null);
+    const [activeJob, setActiveJob] = useState<{ source: DataSource; status: IngestionJobStatus; jobId: string } | null>(
+        null
+    );
     const eventSourceRef = useRef<EventSource | null>(null);
 
     useEffect(() => {
@@ -149,44 +127,54 @@ const DataIngestionView: React.FC = () => {
         };
     }, []);
 
-    const appendLog = useCallback((entry: StatusLog) => {
+    const appendLog = useCallback((entry: IngestionLogEntry) => {
         setStatusLog(prev => [...prev, entry]);
     }, []);
 
-    const openIngestionStream = useCallback((jobId: string, source: DataSource, initialStatus: JobStatus): Promise<JobStatus> => {
-        return new Promise((resolve, reject) => {
-            if (typeof window === 'undefined' || typeof EventSource === 'undefined') {
-                const fallbackTimestamp = new Date().toISOString();
-                appendLog({
-                    id: `${jobId}-fallback`,
-                    source,
-                    timestamp: fallbackTimestamp,
-                    level: 'warn',
-                    message: 'Real-time updates are unavailable in this environment. Polling for job status.',
-                    status: initialStatus !== 'unknown' ? initialStatus : undefined,
-                });
+    const openIngestionStream = useCallback(
+        (jobId: string, source: DataSource, initialStatus: IngestionJobStatus): Promise<IngestionJobStatus> => {
+            return new Promise((resolve, reject) => {
+                if (typeof window === 'undefined' || typeof EventSource === 'undefined') {
+                    const fallbackTimestamp = new Date().toISOString();
+                    appendLog({
+                        id: `${jobId}-fallback`,
+                        source,
+                        timestamp: fallbackTimestamp,
+                        level: 'warn',
+                        message: 'Real-time updates are unavailable in this environment. Polling for job status.',
+                        status: initialStatus !== IngestionJobStatus.Unknown ? initialStatus : undefined,
+                        jobId,
+                    });
 
-                // Polling fallback
-                let isActive = true;
-                const terminalStates: JobStatus[] = ['completed', 'failed', 'cancelled'];
-                let lastStatus: JobStatus = initialStatus !== 'unknown' ? initialStatus : 'running';
+                    // Polling fallback
+                    let isActive = true;
+                    const terminalStates: IngestionJobStatus[] = [
+                        IngestionJobStatus.Completed,
+                        IngestionJobStatus.Failed,
+                        IngestionJobStatus.Cancelled,
+                    ];
+                    let lastStatus: IngestionJobStatus =
+                        initialStatus !== IngestionJobStatus.Unknown ? initialStatus : IngestionJobStatus.Running;
 
-                const poll = async () => {
-                    try {
-                        const resp = await apiFetch(`/api/datasets/jobs/${encodeURIComponent(jobId)}/status`);
-                        const status: JobStatus = resp?.status || 'unknown';
-                        const pollTimestamp = new Date().toISOString();
-                        if (status !== lastStatus) {
-                            appendLog({
-                                id: `${jobId}-poll-${status}-${pollTimestamp}`,
-                                source,
-                                timestamp: pollTimestamp,
-                                level: 'info',
-                                message: `Job status updated: ${status}`,
-                                status,
-                            });
-                            lastStatus = status;
-                        }
+                    const poll = async () => {
+                        try {
+                        const resp = await apiFetch<IngestionJobResponse>(
+                            `/api/datasets/jobs/${encodeURIComponent(jobId)}/status`
+                        );
+                        const status = normalizeStatus(resp?.status ?? resp?.job?.status);
+                            const pollTimestamp = new Date().toISOString();
+                            if (status !== lastStatus) {
+                                appendLog({
+                                    id: `${jobId}-poll-${status}-${pollTimestamp}`,
+                                    source,
+                                    timestamp: pollTimestamp,
+                                    level: 'info',
+                                    message: `Job status updated: ${status}`,
+                                    status,
+                                    jobId,
+                                });
+                                lastStatus = status;
+                            }
                         if (terminalStates.includes(status)) {
                             isActive = false;
                             resolve(status);
@@ -202,6 +190,7 @@ const DataIngestionView: React.FC = () => {
                             level: 'error',
                             message: `Polling error: ${err instanceof Error ? err.message : String(err)}`,
                             status: lastStatus,
+                            jobId,
                         });
                         // Optionally, you could reject here, or keep polling
                         if (isActive) {
@@ -217,13 +206,14 @@ const DataIngestionView: React.FC = () => {
                 return;
             }
 
-            let lastStatus = initialStatus !== 'unknown' ? initialStatus : 'running';
+            let lastStatus =
+                initialStatus !== IngestionJobStatus.Unknown ? initialStatus : IngestionJobStatus.Running;
             const streamUrl = `/api/datasets/jobs/${encodeURIComponent(jobId)}/events`;
             const eventSource = new EventSource(streamUrl);
             eventSourceRef.current = eventSource;
             let settled = false;
 
-            const complete = (status: JobStatus) => {
+            const complete = (status: IngestionJobStatus) => {
                 if (settled) {
                     return;
                 }
@@ -266,20 +256,23 @@ const DataIngestionView: React.FC = () => {
                                 ? payload.description
                                 : rawData || `${event.type} event received`;
 
-                const entry: StatusLog = {
+                const entry: IngestionLogEntry = {
                     id: (payload.id as string | undefined) ?? `${jobId}-${Date.now()}-${Math.random().toString(36).slice(2)}`,
                     source: (payload.source as string | undefined) ?? source,
                     timestamp,
                     level,
                     message,
-                    status: payloadStatus !== 'unknown' ? payloadStatus : undefined,
+                    status: payloadStatus !== IngestionJobStatus.Unknown ? payloadStatus : undefined,
+                    jobId,
                 };
 
                 appendLog(entry);
 
-                if (payloadStatus !== 'unknown') {
+                if (payloadStatus !== IngestionJobStatus.Unknown) {
                     lastStatus = payloadStatus;
-                    setActiveJob(current => (current && current.jobId === jobId ? { ...current, status: lastStatus } : current));
+                    setActiveJob(current =>
+                        current && current.jobId === jobId ? { ...current, status: lastStatus } : current
+                    );
                     if (isTerminalStatus(payloadStatus)) {
                         complete(payloadStatus);
                     }
@@ -311,7 +304,9 @@ const DataIngestionView: React.FC = () => {
                 reject(new Error('Connection to the ingestion stream was interrupted.'));
             };
         });
-    }, [appendLog]);
+        },
+        [appendLog],
+    );
 
     const handleStartIngestion = useCallback(async () => {
         setIsLoading(true);
@@ -330,12 +325,14 @@ const DataIngestionView: React.FC = () => {
                     throw new Error(`The ingestion response for ${source} did not include a job identifier.`);
                 }
 
-                const initialStatus = normalizeStatus(response?.status ?? response?.job?.status ?? 'running');
+                const initialStatus = normalizeStatus(
+                    response?.status ?? response?.job?.status ?? IngestionJobStatus.Running
+                );
                 setActiveJob({ source, status: initialStatus, jobId });
 
                 const finalStatus = await openIngestionStream(jobId, source, initialStatus);
 
-                if (finalStatus !== 'completed') {
+                if (finalStatus !== IngestionJobStatus.Completed) {
                     throw new Error(`Ingestion for ${source} ended with status: ${finalStatus}.`);
                 }
             }

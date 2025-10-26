@@ -3,7 +3,7 @@ import { summarizeWithGemini } from '../services/geminiService';
 import { DnaIcon } from './icons/Icons';
 
 interface GeminiSummaryProps {
-  data: any;
+  data: unknown;
   context: string;
 }
 
@@ -27,8 +27,9 @@ const GeminiSummary: React.FC<GeminiSummaryProps> = ({ data, context }) => {
         .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
         .replace(/\n/g, '<br />');
       setSummary(formattedResult);
-    } catch (e: any) {
-      setError(e.message || 'An unexpected error occurred.');
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'An unexpected error occurred.';
+      setError(message);
     } finally {
       setIsLoading(false);
     }
