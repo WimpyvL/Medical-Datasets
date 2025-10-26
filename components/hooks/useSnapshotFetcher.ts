@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react';
-import { SnapshotResponse } from '../../types';
+import { ApiErrorResponse, SnapshotResponse } from '../../types';
 import { ApiError } from '../../services/apiClient';
 
 type SnapshotFetcher<T> = (pageToken?: string) => Promise<SnapshotResponse<T>>;
@@ -14,9 +14,31 @@ interface UseSnapshotFetcherResult<T> {
   reset: () => void;
 }
 
+const formatValidationErrors = (response: ApiErrorResponse): string | null => {
+  if (response.type !== 'validation' || !response.fieldErrors) {
+    return null;
+  }
+
+  const combined = Object.entries(response.fieldErrors)
+    .map(([field, messages]) => `${field}: ${messages.join(', ')}`)
+    .join('; ');
+
+  return combined || null;
+};
+
 const formatErrorMessage = (error: unknown): string => {
   if (error instanceof ApiError) {
-    return error.message;
+    const { response } = error;
+    if (response.type === 'validation') {
+      const detailed = formatValidationErrors(response);
+      return detailed ? `${response.message} (${detailed})` : response.message;
+    }
+
+    if (response.type === 'network') {
+      return `${response.message} Please check your connection and try again.`;
+    }
+
+    return response.message;
   }
 
   if (error instanceof Error) {
