@@ -7,7 +7,13 @@ import { useSnapshotFetcher } from '../hooks/useSnapshotFetcher';
 
 const Synthea: React.FC = () => {
   const fetcher = useCallback((pageToken?: string) => fetchSyntheaData(pageToken), []);
-  const { data, isLoading, error, fetchData, fetchPage } = useSnapshotFetcher<SyntheaPatient>(fetcher);
+  const { snapshot, isLoading, isRefreshing, error, fetchLatest, loadPage } = useSnapshotFetcher<SyntheaPatient>(fetcher);
+  const downloadUrl = snapshot?.downloadUrl;
+  const handleDownload = useCallback(() => {
+    if (downloadUrl) {
+      window.open(downloadUrl, '_blank', 'noopener,noreferrer');
+    }
+  }, [downloadUrl]);
 
   const renderCards = (d: SyntheaPatient[]) => (
     <div className="space-y-4">
@@ -34,11 +40,13 @@ const Synthea: React.FC = () => {
       }
     >
       <DataDisplay<SyntheaPatient>
-        data={data}
+        snapshot={snapshot}
         error={error}
         isLoading={isLoading}
-        fetchData={fetchData}
-        fetchPage={fetchPage}
+        isRefreshing={isRefreshing}
+        onFetchLatest={fetchLatest}
+        onLoadPage={loadPage}
+        onDownload={downloadUrl ? handleDownload : undefined}
         renderData={renderCards}
       />
     </DataSourceCard>

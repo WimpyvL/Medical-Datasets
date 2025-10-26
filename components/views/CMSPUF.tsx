@@ -7,7 +7,13 @@ import { useSnapshotFetcher } from '../hooks/useSnapshotFetcher';
 
 const CMSPUF: React.FC = () => {
   const fetcher = useCallback((pageToken?: string) => fetchCmsPufData(pageToken), []);
-  const { data, isLoading, error, fetchData, fetchPage } = useSnapshotFetcher<CmsPufData>(fetcher);
+  const { snapshot, isLoading, isRefreshing, error, fetchLatest, loadPage } = useSnapshotFetcher<CmsPufData>(fetcher);
+  const downloadUrl = snapshot?.downloadUrl;
+  const handleDownload = useCallback(() => {
+    if (downloadUrl) {
+      window.open(downloadUrl, '_blank', 'noopener,noreferrer');
+    }
+  }, [downloadUrl]);
 
   const renderCards = (d: CmsPufData[]) => (
     <div className="space-y-4">
@@ -36,11 +42,13 @@ const CMSPUF: React.FC = () => {
       }
     >
       <DataDisplay<CmsPufData>
-        data={data}
+        snapshot={snapshot}
         error={error}
         isLoading={isLoading}
-        fetchData={fetchData}
-        fetchPage={fetchPage}
+        isRefreshing={isRefreshing}
+        onFetchLatest={fetchLatest}
+        onLoadPage={loadPage}
+        onDownload={downloadUrl ? handleDownload : undefined}
         renderData={renderCards}
       />
     </DataSourceCard>
