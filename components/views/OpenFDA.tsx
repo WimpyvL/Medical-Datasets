@@ -1,26 +1,13 @@
-import React, { useState, useCallback } from 'react';
+import React, { useCallback } from 'react';
 import { OpenFDAEndpoint, DataSource } from '../../types';
 import { fetchOpenFDAData } from '../../services/medicalDataService';
 import DataSourceCard from '../DataSourceCard';
 import DataDisplay from '../DataDisplay';
+import { useSnapshotFetcher } from '../hooks/useSnapshotFetcher';
 
 const OpenFDA: React.FC = () => {
-  const [data, setData] = useState<OpenFDAEndpoint[] | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const handleFetchData = useCallback(async () => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      const result = await fetchOpenFDAData();
-      setData(result);
-    } catch (e) {
-      setError('Failed to fetch data.');
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
+  const fetcher = useCallback((pageToken?: string) => fetchOpenFDAData(pageToken), []);
+  const { data, isLoading, error, fetchData, fetchPage } = useSnapshotFetcher<OpenFDAEndpoint>(fetcher);
 
   const renderCards = (d: OpenFDAEndpoint[]) => (
     <div className="space-y-4">
@@ -52,7 +39,8 @@ const OpenFDA: React.FC = () => {
         data={data}
         error={error}
         isLoading={isLoading}
-        fetchData={handleFetchData}
+        fetchData={fetchData}
+        fetchPage={fetchPage}
         renderData={renderCards}
       />
     </DataSourceCard>

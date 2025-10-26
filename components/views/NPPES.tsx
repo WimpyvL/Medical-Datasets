@@ -1,26 +1,13 @@
-import React, { useState, useCallback } from 'react';
+import React, { useCallback } from 'react';
 import { NppesData, DataSource } from '../../types';
 import { fetchNppesData } from '../../services/medicalDataService';
 import DataSourceCard from '../DataSourceCard';
 import DataDisplay from '../DataDisplay';
+import { useSnapshotFetcher } from '../hooks/useSnapshotFetcher';
 
 const NPPES: React.FC = () => {
-  const [data, setData] = useState<NppesData[] | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const handleFetchData = useCallback(async () => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      const result = await fetchNppesData();
-      setData(result);
-    } catch (e) {
-      setError('Failed to fetch data.');
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
+  const fetcher = useCallback((pageToken?: string) => fetchNppesData(pageToken), []);
+  const { data, isLoading, error, fetchData, fetchPage } = useSnapshotFetcher<NppesData>(fetcher);
 
   const renderTable = (d: NppesData[]) => (
     <div className="overflow-x-auto">
@@ -63,7 +50,8 @@ const NPPES: React.FC = () => {
         data={data}
         error={error}
         isLoading={isLoading}
-        fetchData={handleFetchData}
+        fetchData={fetchData}
+        fetchPage={fetchPage}
         renderData={renderTable}
       />
     </DataSourceCard>

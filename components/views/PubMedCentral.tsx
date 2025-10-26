@@ -1,26 +1,13 @@
-import React, { useState, useCallback } from 'react';
+import React, { useCallback } from 'react';
 import { PubMedArticle, DataSource } from '../../types';
 import { fetchPubMedCentralData } from '../../services/medicalDataService';
 import DataSourceCard from '../DataSourceCard';
 import DataDisplay from '../DataDisplay';
+import { useSnapshotFetcher } from '../hooks/useSnapshotFetcher';
 
 const PubMedCentral: React.FC = () => {
-  const [data, setData] = useState<PubMedArticle[] | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const handleFetchData = useCallback(async () => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      const result = await fetchPubMedCentralData();
-      setData(result);
-    } catch (e) {
-      setError('Failed to fetch data.');
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
+  const fetcher = useCallback((pageToken?: string) => fetchPubMedCentralData(pageToken), []);
+  const { data, isLoading, error, fetchData, fetchPage } = useSnapshotFetcher<PubMedArticle>(fetcher);
 
   const renderCards = (d: PubMedArticle[]) => (
     <div className="space-y-4">
@@ -49,7 +36,8 @@ const PubMedCentral: React.FC = () => {
         data={data}
         error={error}
         isLoading={isLoading}
-        fetchData={handleFetchData}
+        fetchData={fetchData}
+        fetchPage={fetchPage}
         renderData={renderCards}
       />
     </DataSourceCard>

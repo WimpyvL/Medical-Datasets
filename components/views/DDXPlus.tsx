@@ -1,27 +1,14 @@
 
-import React, { useState, useCallback } from 'react';
+import React, { useCallback } from 'react';
 import { DdxPlusRecord } from '../../types';
 import { fetchDdxPlusData } from '../../services/medicalDataService';
 import DataSourceCard from '../DataSourceCard';
 import DataDisplay from '../DataDisplay';
+import { useSnapshotFetcher } from '../hooks/useSnapshotFetcher';
 
 const DDXPlus: React.FC = () => {
-  const [data, setData] = useState<DdxPlusRecord[] | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const handleFetchData = useCallback(async () => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      const result = await fetchDdxPlusData();
-      setData(result);
-    } catch (e) {
-      setError('Failed to fetch data.');
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
+  const fetcher = useCallback((pageToken?: string) => fetchDdxPlusData(pageToken), []);
+  const { data, isLoading, error, fetchData, fetchPage } = useSnapshotFetcher<DdxPlusRecord>(fetcher);
 
   const renderCards = (d: DdxPlusRecord[]) => (
     <div className="space-y-4">
@@ -51,7 +38,8 @@ const DDXPlus: React.FC = () => {
         data={data}
         error={error}
         isLoading={isLoading}
-        fetchData={handleFetchData}
+        fetchData={fetchData}
+        fetchPage={fetchPage}
         renderData={renderCards}
       />
     </DataSourceCard>

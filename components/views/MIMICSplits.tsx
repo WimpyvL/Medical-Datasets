@@ -1,27 +1,14 @@
 
-import React, { useState, useCallback } from 'react';
+import React, { useCallback } from 'react';
 import { MimicSplit } from '../../types';
 import { fetchMimicSplitsData } from '../../services/medicalDataService';
 import DataSourceCard from '../DataSourceCard';
 import DataDisplay from '../DataDisplay';
+import { useSnapshotFetcher } from '../hooks/useSnapshotFetcher';
 
 const MIMICSplits: React.FC = () => {
-  const [data, setData] = useState<MimicSplit[] | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const handleFetchData = useCallback(async () => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      const result = await fetchMimicSplitsData();
-      setData(result);
-    } catch (e) {
-      setError('Failed to fetch data.');
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
+  const fetcher = useCallback((pageToken?: string) => fetchMimicSplitsData(pageToken), []);
+  const { data, isLoading, error, fetchData, fetchPage } = useSnapshotFetcher<MimicSplit>(fetcher);
 
   const renderTable = (d: MimicSplit[]) => (
     <div className="overflow-x-auto">
@@ -62,7 +49,8 @@ const MIMICSplits: React.FC = () => {
         data={data}
         error={error}
         isLoading={isLoading}
-        fetchData={handleFetchData}
+        fetchData={fetchData}
+        fetchPage={fetchPage}
         renderData={renderTable}
       />
     </DataSourceCard>

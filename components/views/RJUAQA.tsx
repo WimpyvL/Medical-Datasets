@@ -1,27 +1,14 @@
 
-import React, { useState, useCallback } from 'react';
+import React, { useCallback } from 'react';
 import { RjuaQaPair } from '../../types';
 import { fetchRjuaQaData } from '../../services/medicalDataService';
 import DataSourceCard from '../DataSourceCard';
 import DataDisplay from '../DataDisplay';
+import { useSnapshotFetcher } from '../hooks/useSnapshotFetcher';
 
 const RJUAQA: React.FC = () => {
-  const [data, setData] = useState<RjuaQaPair[] | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const handleFetchData = useCallback(async () => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      const result = await fetchRjuaQaData();
-      setData(result);
-    } catch (e) {
-      setError('Failed to fetch data.');
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
+  const fetcher = useCallback((pageToken?: string) => fetchRjuaQaData(pageToken), []);
+  const { data, isLoading, error, fetchData, fetchPage } = useSnapshotFetcher<RjuaQaPair>(fetcher);
 
   const renderCards = (d: RjuaQaPair[]) => (
     <div className="space-y-4">
@@ -50,7 +37,8 @@ const RJUAQA: React.FC = () => {
         data={data}
         error={error}
         isLoading={isLoading}
-        fetchData={handleFetchData}
+        fetchData={fetchData}
+        fetchPage={fetchPage}
         renderData={renderCards}
       />
     </DataSourceCard>

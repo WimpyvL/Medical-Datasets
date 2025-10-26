@@ -1,27 +1,14 @@
 
-import React, { useState, useCallback } from 'react';
+import React, { useCallback } from 'react';
 import { ClinicalTrial, DataSource } from '../../types';
 import { fetchClinicalTrialsData } from '../../services/medicalDataService';
 import DataSourceCard from '../DataSourceCard';
 import DataDisplay from '../DataDisplay';
+import { useSnapshotFetcher } from '../hooks/useSnapshotFetcher';
 
 const ClinicalTrials: React.FC = () => {
-  const [data, setData] = useState<ClinicalTrial[] | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const handleFetchData = useCallback(async () => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      const result = await fetchClinicalTrialsData();
-      setData(result);
-    } catch (e) {
-      setError('Failed to fetch data.');
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
+  const fetcher = useCallback((pageToken?: string) => fetchClinicalTrialsData(pageToken), []);
+  const { data, isLoading, error, fetchData, fetchPage } = useSnapshotFetcher<ClinicalTrial>(fetcher);
   
   const getStatusColor = (status: string) => {
     if (status.toLowerCase().includes('recruiting')) return 'bg-green-100 text-green-800';
@@ -61,7 +48,8 @@ const ClinicalTrials: React.FC = () => {
         data={data}
         error={error}
         isLoading={isLoading}
-        fetchData={handleFetchData}
+        fetchData={fetchData}
+        fetchPage={fetchPage}
         renderData={renderCards}
       />
     </DataSourceCard>
