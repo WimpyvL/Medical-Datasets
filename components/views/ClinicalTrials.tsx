@@ -39,7 +39,7 @@ const ClinicalTrials: React.FC = () => {
       ingestion={
         <>
           <p><strong>Method:</strong> REST API Call (JSON)</p>
-          <p>This component simulates a query to the ClinicalTrials.gov API to fetch study fields like title, status, and condition for a given keyword.</p>
+          <p>The backend executes ClinicalTrials.gov queries, normalizes the response, and publishes it as a snapshot enriched with pagination tokens and download metadata.</p>
           <p>The real API allows for complex queries and filtering, for example: <code>/api/query/study_fields?expr=diabetes</code></p>
         </>
       }

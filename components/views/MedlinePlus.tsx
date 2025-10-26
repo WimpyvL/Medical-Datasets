@@ -35,7 +35,7 @@ const MedlinePlus: React.FC = () => {
         <>
           <p><strong>Method:</strong> XML File Download & Parsing</p>
           <p>This process requires a backend to: (1) Download the compressed XML file from medlineplus.gov, (2) Extract the XML, and (3) Parse each <code>&lt;record&gt;</code> element into structured fields.</p>
-          <p>The data shown is a sample of the parsed XML content.</p>
+          <p>The backend persists each ingest as a timestamped snapshot so the UI can fetch rich metadata, pagination details, and a download link for the full export.</p>
         </>
       }
     >
