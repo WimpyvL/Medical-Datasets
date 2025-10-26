@@ -114,7 +114,7 @@ const USPSTF: React.FC = () => {
                   )}
                   {data.pagination?.nextToken && (
                     <button
-                      onClick={() => fetchPage(data.pagination!.nextToken!)}
+                      onClick={() => data.pagination?.nextToken && fetchPage(data.pagination.nextToken)}
                       className="px-4 py-2 rounded-lg bg-cyan-500 text-white font-semibold shadow hover:bg-cyan-600"
                     >
                       Next Page
