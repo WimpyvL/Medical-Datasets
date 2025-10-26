@@ -161,6 +161,8 @@ const DataIngestionView: React.FC = () => {
                         const resp = await apiFetch<IngestionJobResponse>(
                             `/api/datasets/jobs/${encodeURIComponent(jobId)}/status`
                         );
+                        // Some API responses may return status at the top level, others nested under job.
+                        // Check both for backward compatibility and robustness.
                         const status = normalizeStatus(resp?.status ?? resp?.job?.status);
                             const pollTimestamp = new Date().toISOString();
                             if (status !== lastStatus) {
