@@ -26,7 +26,7 @@ const formatValidationErrors = (response: ApiErrorResponse): string | null => {
   return combined || null;
 };
 
-const formatErrorMessage = (error: unknown): string => {
+export const formatApiError = (error: unknown): string => {
   if (error instanceof ApiError) {
     const { response } = error;
     if (response.type === 'validation') {
@@ -64,7 +64,7 @@ export const useSnapshotFetcher = <T,>(fetcher: SnapshotFetcher<T>): UseSnapshot
         const response = await fetcher(pageToken);
         setSnapshot(response);
       } catch (err) {
-        setError(formatErrorMessage(err));
+        setError(formatApiError(err));
       } finally {
         setIsRefreshing(false);
         setIsLoading(false);
