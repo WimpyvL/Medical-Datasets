@@ -1,5 +1,6 @@
 export enum DataSource {
   DataIngestion = 'Data Ingestion',
+  FireScrapeTool = 'FireScrape Tool',
   DailyMed = 'DailyMed',
   OrangeBook = 'Orange Book',
   CDCGuidelines = 'CDC/NIH Guidelines',
@@ -25,6 +26,24 @@ export enum DataSource {
   RJUAQA = 'RJUA-QA',
   DDXPlus = 'DDXPlus Dataset',
   LUNA16 = 'LUNA16',
+}
+
+export interface FireScrapeResult {
+  url: string;
+  title: string | null;
+  contentType: string;
+  text: string;
+  truncated: boolean;
+  bytesDownloaded: number;
+  fetchedAt: string;
+}
+
+export interface FireCrawlResult {
+  url: string;
+  markdown: string;
+  metadata: Record<string, unknown> | null;
+  links?: unknown[];
+  fetchedAt: string;
 }
 
 export interface DailyMedDrug {

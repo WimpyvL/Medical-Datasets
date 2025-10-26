@@ -9,6 +9,7 @@ interface SidebarProps {
 
 const actions = [
     { id: DataSource.DataIngestion, icon: <IngestionIcon /> },
+    { id: DataSource.FireScrapeTool, icon: <SearchIcon /> },
 ];
 
 const freeDataSources = [
