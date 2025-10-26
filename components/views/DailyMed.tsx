@@ -1,28 +1,15 @@
 
-import React, { useState, useCallback } from 'react';
+import React, { useCallback } from 'react';
 import { DailyMedDrug, DataSource } from '../../types';
 import { fetchDailyMedData } from '../../services/medicalDataService';
+import { useSnapshotFetcher } from '../hooks/useSnapshotFetcher';
 import DataSourceCard from '../DataSourceCard';
 import DataDisplay from '../DataDisplay';
 
 const DailyMed: React.FC = () => {
-  const [data, setData] = useState<DailyMedDrug[] | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const fetcher = useCallback((pageToken?: string) => fetchDailyMedData(pageToken), []);
+  const { data, isLoading, error, fetchData, fetchPage } = useSnapshotFetcher<DailyMedDrug>(fetcher);
 
-  const handleFetchData = useCallback(async () => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      const result = await fetchDailyMedData();
-      setData(result);
-    } catch (e) {
-      setError('Failed to fetch data.');
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-  
   const renderTable = (d: DailyMedDrug[]) => (
     <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-slate-200">
@@ -61,7 +48,8 @@ const DailyMed: React.FC = () => {
         data={data}
         error={error}
         isLoading={isLoading}
-        fetchData={handleFetchData}
+        fetchData={fetchData}
+        fetchPage={fetchPage}
         renderData={renderTable}
       />
     </DataSourceCard>

@@ -1,28 +1,15 @@
 
-import React, { useState, useCallback } from 'react';
+import React, { useCallback } from 'react';
 import { OrangeBookProduct, DataSource } from '../../types';
 import { fetchOrangeBookData } from '../../services/medicalDataService';
 import DataSourceCard from '../DataSourceCard';
 import DataDisplay from '../DataDisplay';
+import { useSnapshotFetcher } from '../hooks/useSnapshotFetcher';
 
 const OrangeBook: React.FC = () => {
-  const [data, setData] = useState<OrangeBookProduct[] | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const fetcher = useCallback((pageToken?: string) => fetchOrangeBookData(pageToken), []);
+  const { data, isLoading, error, fetchData, fetchPage } = useSnapshotFetcher<OrangeBookProduct>(fetcher);
 
-  const handleFetchData = useCallback(async () => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      const result = await fetchOrangeBookData();
-      setData(result);
-    } catch (e) {
-      setError('Failed to fetch data.');
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-  
   const renderTable = (d: OrangeBookProduct[]) => (
     <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-slate-200">
@@ -65,7 +52,8 @@ const OrangeBook: React.FC = () => {
         data={data}
         error={error}
         isLoading={isLoading}
-        fetchData={handleFetchData}
+        fetchData={fetchData}
+        fetchPage={fetchPage}
         renderData={renderTable}
       />
     </DataSourceCard>

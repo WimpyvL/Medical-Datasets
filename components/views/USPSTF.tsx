@@ -1,30 +1,23 @@
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { UspstfRecommendation, DataSource } from '../../types';
 import { fetchUspstfData } from '../../services/medicalDataService';
 import DataSourceCard from '../DataSourceCard';
+import { useSnapshotFetcher } from '../hooks/useSnapshotFetcher';
 
 const USPSTF: React.FC = () => {
-  const [data, setData] = useState<UspstfRecommendation[] | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  
   const [age, setAge] = useState(55);
   const [sex, setSex] = useState<'Male' | 'Female'>('Male');
   const [tobacco, setTobacco] = useState(true);
+  const fetcher = useCallback(
+    (pageToken?: string) => fetchUspstfData(age, sex, tobacco, pageToken),
+    [age, sex, tobacco],
+  );
+  const { data, isLoading, error, fetchData, fetchPage, reset } = useSnapshotFetcher<UspstfRecommendation>(fetcher);
 
-  const handleFetchData = useCallback(async () => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      const result = await fetchUspstfData(age, sex, tobacco);
-      setData(result);
-    } catch (e) {
-      setError('Failed to fetch data.');
-    } finally {
-      setIsLoading(false);
-    }
-  }, [age, sex, tobacco]);
+  useEffect(() => {
+    reset();
+  }, [age, sex, tobacco, reset]);
 
   const getGradeColor = (grade: string) => {
     switch(grade) {
@@ -71,14 +64,35 @@ const USPSTF: React.FC = () => {
             </div>
         </div>
         <div className="text-center mb-4">
-          <button onClick={handleFetchData} disabled={isLoading} className="px-6 py-2 bg-cyan-500 text-white font-semibold rounded-lg shadow-md hover:bg-cyan-600 disabled:bg-slate-400">
+          <button onClick={fetchData} disabled={isLoading} className="px-6 py-2 bg-cyan-500 text-white font-semibold rounded-lg shadow-md hover:bg-cyan-600 disabled:bg-slate-400">
             {isLoading ? 'Fetching...' : 'Get Recommendations'}
           </button>
         </div>
         {error && <p className="text-red-500 text-center">{error}</p>}
-        {!isLoading && data && (
+        {data && (
+            <>
+              <div className="mb-4 rounded-lg border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
+                <div className="flex flex-wrap gap-4">
+                  <div>
+                    <span className="font-semibold text-slate-700">Source:</span> {data.snapshot.source}
+                  </div>
+                  <div>
+                    <span className="font-semibold text-slate-700">Snapshot:</span> {data.snapshot.timestamp}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="font-semibold text-slate-700">Cache:</span>
+                    <span
+                      className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${
+                        data.snapshot.isFromCache ? 'bg-amber-100 text-amber-800' : 'bg-emerald-100 text-emerald-800'
+                      }`}
+                    >
+                      {data.snapshot.isFromCache ? 'Served from cache' : 'Fresh snapshot'}
+                    </span>
+                  </div>
+                </div>
+              </div>
             <div className="space-y-4">
-                {data.map((rec, i) => (
+                {data.items.map((rec, i) => (
                     <div key={i} className="bg-slate-50 p-4 rounded-lg">
                         <div className="flex justify-between items-start">
                            <h4 className="font-semibold text-slate-800 flex-1 pr-2">{rec.screening}</h4>
@@ -88,6 +102,34 @@ const USPSTF: React.FC = () => {
                     </div>
                 ))}
             </div>
+              {(data.pagination?.previousToken || data.pagination?.nextToken) && (
+                <div className="mt-6 flex justify-end gap-3">
+                  {data.pagination?.previousToken && (
+                    <button
+                      onClick={() => fetchPage(data.pagination!.previousToken!)}
+                      className="px-4 py-2 rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-100"
+                    >
+                      Previous Page
+                    </button>
+                  )}
+                  {data.pagination?.nextToken && (
+                    <button
+                      onClick={() => data.pagination?.nextToken && fetchPage(data.pagination.nextToken)}
+                      className="px-4 py-2 rounded-lg bg-cyan-500 text-white font-semibold shadow hover:bg-cyan-600"
+                    >
+                      Next Page
+                    </button>
+                  )}
+                </div>
+              )}
+              {data.downloadUrl && (
+                <div className="mt-4 text-right">
+                  <a href={data.downloadUrl} target="_blank" rel="noopener noreferrer" className="text-cyan-600 hover:text-cyan-700 font-medium">
+                    Download full snapshot
+                  </a>
+                </div>
+              )}
+            </>
         )}
       </div>
     </DataSourceCard>

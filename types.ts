@@ -28,6 +28,27 @@ export enum DataSource {
   LUNA16 = 'LUNA16',
 }
 
+export interface SnapshotMetadata {
+  snapshotId?: string;
+  source: string;
+  timestamp: string;
+  isFromCache?: boolean;
+  recordCount?: number;
+  additionalInfo?: Record<string, unknown>;
+}
+
+export interface PaginationTokens {
+  nextToken?: string;
+  previousToken?: string;
+}
+
+export interface SnapshotResponse<T> {
+  items: T[];
+  snapshot: SnapshotMetadata;
+  pagination?: PaginationTokens;
+  downloadUrl?: string;
+}
+
 export interface FireScrapeResult {
   url: string;
   title: string | null;
