@@ -81,7 +81,7 @@ const DataDisplay = <T,>({ data, error, isLoading, fetchData, renderData, fetchP
                 )}
                 {pagination?.nextToken && (
                   <button
-                    onClick={() => fetchPage(pagination.nextToken!)}
+                    onClick={() => pagination.nextToken && fetchPage(pagination.nextToken)}
                     className="px-4 py-2 rounded-lg bg-cyan-500 text-white font-semibold shadow hover:bg-cyan-600 transition-colors"
                   >
                     Next Page
