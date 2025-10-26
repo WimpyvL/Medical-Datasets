@@ -45,8 +45,8 @@ const DailyMed: React.FC = () => {
       ingestion={
         <>
           <p><strong>Method:</strong> REST API Call</p>
-          <p>This component simulates calls to <code>services/v2/drugnames</code>. In a real application, this would involve paginating through results to build a complete dataset.</p>
-          <p><strong>Note:</strong> Direct API calls from the browser may be blocked by CORS. A backend proxy is often required.</p>
+          <p>The backend orchestrates paginated calls to <code>services/v2/drugnames</code>, storing each ingest as a snapshot with metadata about record counts and timestamps.</p>
+          <p><strong>Note:</strong> Direct API calls from the browser may be blocked by CORS, so the backend proxy streams the normalized snapshot back to the UI.</p>
         </>
       }
     >

@@ -39,7 +39,7 @@ const USPSTF: React.FC = () => {
         <>
           <p><strong>Method:</strong> REST API with Key</p>
           <p>Access requires an API key. The API returns JSON recommendations based on patient characteristics (age, sex, tobacco use, etc.).</p>
-          <p>This component simulates the API behavior by applying recommendation logic to the patient profile you define.</p>
+          <p>The backend applies those parameters, stores the response as a snapshot, and surfaces the timestamped recommendations with pagination and download links.</p>
         </>
       }
     >

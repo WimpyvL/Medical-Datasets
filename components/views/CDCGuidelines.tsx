@@ -46,7 +46,7 @@ const CDCGuidelines: React.FC = () => {
         <>
           <p><strong>Method:</strong> Web Scraping & PDF Parsing</p>
           <p>Guidelines are often published as web pages or PDF documents. Ingestion requires a backend to scrape HTML or use a library (like PDF.js) to extract text, followed by NLP to identify key sections like recommendations and evidence grading.</p>
-          <p>The data shown is a pre-processed sample.</p>
+          <p>Each processing run is persisted as a snapshot so analysts can reference the timestamped recommendation set and download the underlying source bundle.</p>
         </>
       }
     >

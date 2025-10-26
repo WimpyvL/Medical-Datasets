@@ -37,7 +37,7 @@ const StatPearls: React.FC = () => {
         <>
           <p><strong>Method:</strong> NCBI E-utilities API</p>
           <p>The process involves: (1) Using <code>esearch.fcgi</code> to find Book IDs for StatPearls content, and (2) Calling <code>efetch.fcgi</code> with those IDs to retrieve chapter content in XML format, which is then parsed.</p>
-          <p>This component simulates the API call and displays a sample of parsed data.</p>
+          <p>The backend now orchestrates those fetches, versioning each response into a snapshot so downstream consumers get consistent metadata, pagination, and full-download links.</p>
         </>
       }
     >

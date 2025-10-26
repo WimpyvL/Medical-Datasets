@@ -95,7 +95,7 @@ const DataDisplay = <T,>({
         {showEmptyState && (
           <div className="flex flex-col items-center justify-center h-full text-center">
             <h3 className="text-lg font-medium text-slate-700">No Snapshot Loaded</h3>
-            <p className="text-slate-500 mt-1">Use the button below to fetch the latest dataset snapshot.</p>
+            <p className="text-slate-500 mt-1">Request the latest backend snapshot to view records and pagination metadata.</p>
           </div>
         )}
       </div>
@@ -105,7 +105,7 @@ const DataDisplay = <T,>({
           disabled={disableFetchButton}
           className="px-6 py-2 bg-cyan-500 text-white font-semibold rounded-lg shadow-md hover:bg-cyan-600 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:ring-opacity-75 disabled:bg-slate-400 disabled:cursor-not-allowed transition-colors"
         >
-          {isLoading ? 'Fetching…' : 'Fetch Latest Snapshot'}
+          {isLoading ? 'Fetching...' : 'Fetch Latest Snapshot'}
         </button>
         <div className="flex flex-wrap items-center justify-end gap-3">
           {showPagination && (
